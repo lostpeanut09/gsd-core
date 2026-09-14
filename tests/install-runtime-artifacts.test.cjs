@@ -477,6 +477,26 @@ describe('installRuntimeArtifacts — durable Runtime Surface corpus (#4132)', (
       }
     });
   }
+
+  // Without skills coverage the update workflow's detect-custom-files flags
+  // every installed opencode skill as user-added (backup + restore prompt on
+  // every /gsd-update). The manifest must own exactly what the installer
+  // staged under skills/.
+  test('full global opencode manifest covers every installed skill file with its hash', (t) => {
+    const installed = runMinimalInstall({ runtime: 'opencode', scope: 'global' });
+    t.after(() => cleanup(installed.root));
+    const skillsRoot = path.join(installed.configDir, 'skills');
+    const skillFiles = walk(skillsRoot).filter((file) => {
+      const rel = path.relative(skillsRoot, file).replace(/\\/g, '/');
+      return rel.split('/')[0].startsWith('gsd-');
+    });
+    assert.ok(skillFiles.length > 0, 'opencode install must stage gsd-* skills');
+    for (const file of skillFiles) {
+      const key = 'skills/' + path.relative(skillsRoot, file).replace(/\\/g, '/');
+      const hash = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+      assert.strictEqual(installed.manifest.files[key], hash, `${key} must be manifest-owned with the installed hash`);
+    }
+  });
 });
 
 const SKILLS_RUNTIMES_LAYOUT = [

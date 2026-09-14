@@ -123,7 +123,11 @@ test('opencode descriptor declares runtime.hostBehaviors (the folded-in behavior
   assert.equal(hb.skipHomePrefixSubstitution, true);
   assert.equal(hb.skipSettingsUi, true);
   assert.equal(hb.skipUpdateBannerCommand, true);
-  assert.equal(hb.skipCodexSkillsManifest, true);
+  // opencode skills ARE manifest-owned like every other skills runtime (kilo
+  // proves the converted layout manifests cleanly): the manifest must cover
+  // what the installer stages under skills/ so detect-custom-files does not
+  // flag all 72 installed skills as user-added on every update.
+  assert.equal(hb.skipCodexSkillsManifest, undefined);
   assert.equal(hb.nativePlugin.file, 'gsd-core.js');
   assert.equal(hb.nativePlugin.source, '.opencode/plugins/gsd-core.js');
 });
